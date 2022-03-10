@@ -18,10 +18,10 @@ def removePeaks(df):
             if j == lim-1:
                 for s in range(i-j-10, i+1):
                     shouldRemove.add(s)
-    print(shouldRemove)
+    #print(shouldRemove)
     df = df.drop(shouldRemove)
-    df["Intensity"] = savgol_filter(df["Intensity"], 5, 2)
+    #df["Intensity"] = savgol_filter(df["Intensity"], 5, 2)
                 
         
 
-print(removePeaks(df))
+#print(removePeaks(df))

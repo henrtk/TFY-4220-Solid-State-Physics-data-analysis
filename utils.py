@@ -1,5 +1,7 @@
-import numpy
-
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.ndimage as spi
 def F(h,k,l):
     """
     params:
@@ -21,7 +23,7 @@ def norm(h,k,l):
         norm of a reciprocal lattice vector in units 2pi/a, 
         a is the cubic lattice spacing.
     """
-    return numpy.sqrt(h**2+k**2+l**2,dtype = numpy.float64)
+    return np.sqrt(h**2+k**2+l**2,dtype = np.float64)
 
 def exposeNonExtinctions(n):
     """
@@ -40,14 +42,33 @@ def exposeNonExtinctions(n):
                     print(f"Nonzero at h = {h}, k = {k}, l = {l}. Q is {norm(h,k,l)}, F = {F(h,k,l)}") 
 
 def D(theta):
-    wavelength = 0.7093
-    return wavelength/(2*numpy.sin(theta))
+    wavelength = 0.7093 #Ångströms 
+    return wavelength/(2*np.sin(theta))
 
 def parseData(filename):
-    with open(filename, "r") as f:
-        pass
+    """
+    params:
+        filename -> string
+        target file to read
+    returns:
+        pd.DataFrame object of the read data
+    """
+    data = pd.read_csv(filename, sep = "\t",error_bad_lines=False)
+    return data
+
+def trapezoidal(datavals : np.ndarray) -> np.float64 :
+    if datavals.shape[1] != 2:
+        raise TypeError(f"The input datavals has the wrong shape {datavals.shape}, expected (i, 2)")
+    dx, y = (datavals[1,0]-datavals[0,0]), datavals[:,1]
+    subintervalAreas = [dx*(ys[1]+ys[0])/2 for ys in zip(y[1:],y[:-1])]
+    return sum(subintervalAreas)
 
 def main():
+    data  =  parseData("unknown XRD data.txt")
+    plt.plot(data.values[:,0])
+    #print(data.dtypes)
+    #print(data)
+    plt.show()
     return
 
 if __name__ == "__main__":

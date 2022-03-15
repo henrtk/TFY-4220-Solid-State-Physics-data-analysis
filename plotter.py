@@ -3,13 +3,16 @@ import numpy as np
 import pandas as pd
 from cleaner import removePeaks
 
-def __main():
-
-    with open("Unknown.txt") as file:
+""" 
+Plots diffraction pattern,
+currently removing peaks.
+Plotly express line plot
+"""
+def plotDiffraction(filename = "Si.txt") -> None:
+    with open(filename) as file:
         df = pd.read_table(file, header=None)
         df.columns = ['Angle', 'Intensity']
 
-    print(df)
     plot = px.line(removePeaks(df), x='Angle', y='Intensity')
     plot.update_xaxes(title=r"$2 \theta [\mathrm{deg}]$", title_font=dict(size=24))
     plot.update_yaxes(title=r"$I [\mathrm{a.u.}]$", title_font=dict(size=24))
@@ -23,6 +26,10 @@ def __main():
         )
     )
     plot.show()
+
+def __main():
+    plotDiffraction()
            
 if __name__=="__main__":
     __main()
+

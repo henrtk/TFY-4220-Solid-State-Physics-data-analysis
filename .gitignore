@@ -2,3 +2,4 @@
 env
 scipy
 __pycache__
+.DS_Store

@@ -1,15 +1,38 @@
 import plotly.express as px
 import numpy as np
 import pandas as pd
-from scipy.signal import savgol_filter
 import scipy.optimize
 import typing
+from scipy.signal import savgol_filter
+
+"""
+Main functionality. Takes in dataframe with columns
+    - "Angle": 2 theta
+    - "Intensity": original measurement
+This function adds the following columns:
+    - "Fit": Curve fit to noise
+    - "Peaks": Data substracted noise
+"""
+def removeNoise(df: np.ndarray) -> np.ndarray:
+    filtered = _removePeaks(df) # Extract noise
+    ys = filtered["Intensity"]
+    xs = filtered['Angle']
+    # Curve fit exponential to noise
+    def func(x, a, b, c): # Function blueprint
+        return a * np.exp(-b*x) + c
+    popt, pcov = scipy.optimize.curve_fit(func, xs, ys)
+    a, b, c = popt
+
+    df["Fit"] = func(df["Angle"], a, b, c) # Noise curve
+    df["Peaks"] = df["Intensity"] - df["Fit"] # Data substracted noise
+    return df
+
 
 """
 Removes diffraction peaks from dataframe df,
-so that we can curve fit to it later
+so that we can curve fit to it later.
 """
-def removePeaks(df):
+def _removePeaks(df, smooth = False):
     shouldRemove=set() # Data points which should be removed
     # Remove points if lim=3 consecutive decreaces
     lim = 3
@@ -21,7 +44,7 @@ def removePeaks(df):
             if j == lim-1:
                 for s in range(i-j-10, i+1):
                     shouldRemove.add(s)
-    # Remove points if lim=4 consecutive increaces
+    # Remove points if lim=4 consecutive increases
     lim = 4
     for i in range(lim+1, df.index.size):
         for j in range(lim):
@@ -37,41 +60,17 @@ def removePeaks(df):
         if (df["Intensity"][i] > 35):
             shouldRemove.add(i)
     df = df.drop(shouldRemove)
-    #df["Intensity"] = savgol_filter(df["Intensity"], 5, 2) #Smoothening filter
+    if smooth:
+        df["Intensity"] = savgol_filter(df["Intensity"], 5, 2) #Smoothening filter
     return df
-
-""" 
-For curve fitting to
-exponential decay
-"""
-def monoExp(x, m, t, b):
-    return m * np.exp(-t * x) + b
 
 def __main():
     with open("Si.txt") as file:
         df = pd.read_table(file, header=None)
         df.columns = ['Angle', 'Intensity']
-        #print(removePeaks(df))
-
-    filtered = removePeaks(df)
-    ys = filtered["Intensity"]
-    xs = filtered.index
-
-    p0 = (1, .0005, 10) # start with values near those we expect
-    params, cv = scipy.optimize.curve_fit(monoExp, xs, ys, p0)
-    m, t, b = params
-    sampleRate = 20_000 # Hz
-    tauSec = (1 / t) / sampleRate
-
-    # determine quality of the fit
-    squaredDiffs = np.square(ys - monoExp(xs, m, t, b))
-    squaredDiffsFromMean = np.square(ys - np.mean(ys))
-    rSquared = 1 - np.sum(squaredDiffs) / np.sum(squaredDiffsFromMean)
-    print(f"R² = {rSquared}")
-
-    filtered["Fit"]=np.square(monoExp(xs, m, t, b))
-
-    p=px.line(filtered, x='Angle', y=['Intensity', 'Fit'])
+    
+    df = removeNoise(df)
+    p=px.line(df, x='Angle', y=['Intensity', 'Fit', "Peaks"])
     p.show()
 
                

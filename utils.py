@@ -5,7 +5,7 @@ import scipy.ndimage as spi
 def F(h,k,l):
     """
     params:
-        h, k, l -> int
+        h, k, l : int
         reciprocal lattice parameters
     returns:
         class complex(), complex number
@@ -16,7 +16,7 @@ def F(h,k,l):
 
 def norm(h,k,l):
     """
-    h, k, l -> int
+    h, k, l : int
         reciprocal lattice parameters
     returns:
         np.float64
@@ -28,7 +28,7 @@ def norm(h,k,l):
 def exposeNonExtinctions(n):
     """
     params:
-        n -> int
+        n : int
     
     returns: 
         void
@@ -48,28 +48,46 @@ def D(theta):
 def parseData(filename):
     """
     params:
-        filename -> string
+        filename : string
         target file to read
     returns:
         pd.DataFrame object of the read data
     """
-    data = pd.read_csv(filename, sep = "\t",error_bad_lines=False)
+    data = pd.read_csv(filename, sep = "\t")
     return data
 
-def trapezoidal(datavals : np.ndarray) -> np.float64 :
+def trapezoidalIntegral(datavals : np.ndarray, a = 0, b = -1) -> np.float64 :
+    """
+    params:
+        datavals : np.ndarray
+        feed it data.values, data : pd.DataFrame
+
+        a, b : int
+        start and end positions in datavals. 
+
+    returns: 
+        numerical integral of datavals[1] with respect to datavals[0], 
+        from a to b, using the trapezoidal quadrature.
+        
+        Assumes uniform spacing for datavals[0].
+    """
     if datavals.shape[1] != 2:
         raise TypeError(f"The input datavals has the wrong shape {datavals.shape}, expected (i, 2)")
-    dx, y = (datavals[1,0]-datavals[0,0]), datavals[:,1]
-    subintervalAreas = [dx*(ys[1]+ys[0])/2 for ys in zip(y[1:],y[:-1])]
+    dx =  datavals[1,0]-datavals[0,0]
+    y  =  datavals[a:b,1]
+    subintervalAreas = [dx*(yend+ystart)/2 for yend, ystart in zip(y[1:],y[:-1])]
     return sum(subintervalAreas)
 
-def main():
+# Testing functions
+def _main():
     data  =  parseData("unknown XRD data.txt")
-    plt.plot(data.values[:,0])
-    #print(data.dtypes)
-    #print(data)
+    cumsum = []
+    for i in range(len(data.values[:,1])):
+        cumsum.append(trapezoidalIntegral(data.values,a = 0, b = i))
+    plt.plot(data.values[:,0],cumsum)
+    plt.plot(data.values[:,0],np.cumsum(data.values[:,1])*0.103)
     plt.show()
     return
 
 if __name__ == "__main__":
-    main()
+    _main()

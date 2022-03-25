@@ -83,7 +83,7 @@ def trapezoidalIntegral(datavals : np.ndarray, a = 0, b = -1) -> np.float64 :
     return sum(subintervalAreas)
 
 # Testing functions
-def _main(): # coords i linjenummer fra -1 og til linjenummer 
+def _main():
     data = parseData("unknown XRD data.txt")
     color = sns.dark_palette("gray")
     sns.palplot(color)
@@ -91,10 +91,6 @@ def _main(): # coords i linjenummer fra -1 og til linjenummer
     #plt.plot(data.values[:,0],np.sin(data.values[:,0]/20))
     plt.show()
     data = cleaner.removeNoise(data)
-   
-
-
-
     return
 
 if __name__ == "__main__":

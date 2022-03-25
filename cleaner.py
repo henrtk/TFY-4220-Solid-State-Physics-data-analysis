@@ -13,6 +13,7 @@ This function adds the following columns:
     - "Fit": Curve fit to noise
     - "Peaks": Data substracted noise
 """
+
 def removeNoise(df: pd.DataFrame) -> pd.DataFrame:
     filtered = _removePeaks(df) # Extract noise
     ys = filtered["Intensity"]
@@ -31,6 +32,7 @@ def removeNoise(df: pd.DataFrame) -> pd.DataFrame:
 """
 Removes diffraction peaks from dataframe df,
 so that we can curve fit to it later.
+
 """
 def _removePeaks(df, smooth = False):
     shouldRemove=set() # Data points which should be removed
@@ -44,6 +46,7 @@ def _removePeaks(df, smooth = False):
             if j == lim-1:
                 for s in range(i-j-10, i+1):
                     shouldRemove.add(s)
+
     # Remove points if lim=4 consecutive increases
     lim = 4
     for i in range(lim+1, df.index.size):
@@ -60,6 +63,7 @@ def _removePeaks(df, smooth = False):
         if (df["Intensity"][i] > 35):
             shouldRemove.add(i)
     df = df.drop(shouldRemove)
+
     if smooth:
         df["Intensity"] = savgol_filter(df["Intensity"], 5, 2) #Smoothening filter
     return df
@@ -72,7 +76,6 @@ def __main():
     df = removeNoise(df)
     p=px.line(df, x='Angle', y=['Intensity', 'Fit', "Peaks"])
     p.show()
-
                
 if __name__=="__main__":
     __main()

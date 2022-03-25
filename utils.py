@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.ndimage as spi
+import pylattice.lattice as lat
+import cleaner
+import seaborn as sns
 def F(h,k,l):
     """
     params:
@@ -43,7 +46,7 @@ def exposeNonExtinctions(n):
 
 def D(theta):
     wavelength = 0.7093 #Ångströms 
-    return wavelength/(2*np.sin(theta))
+    return wavelength/(2*np.sin(theta/2))
 
 def parseData(filename):
     """
@@ -53,7 +56,8 @@ def parseData(filename):
     returns:
         pd.DataFrame object of the read data
     """
-    data = pd.read_csv(filename, sep = "\t")
+    data = pd.read_table(filename, header = None)
+    data.columns = ['Angle', 'Intensity']
     return data
 
 def trapezoidalIntegral(datavals : np.ndarray, a = 0, b = -1) -> np.float64 :
@@ -79,14 +83,18 @@ def trapezoidalIntegral(datavals : np.ndarray, a = 0, b = -1) -> np.float64 :
     return sum(subintervalAreas)
 
 # Testing functions
-def _main():
-    data  =  parseData("unknown XRD data.txt")
-    cumsum = []
-    for i in range(len(data.values[:,1])):
-        cumsum.append(trapezoidalIntegral(data.values,a = 0, b = i))
-    plt.plot(data.values[:,0],cumsum)
-    plt.plot(data.values[:,0],np.cumsum(data.values[:,1])*0.103)
+def _main(): # coords i linjenummer fra -1 og til linjenummer 
+    data = parseData("unknown XRD data.txt")
+    color = sns.dark_palette("gray")
+    sns.palplot(color)
+    #plt.plot(data.values[:,0], data.values[:,1] )
+    #plt.plot(data.values[:,0],np.sin(data.values[:,0]/20))
     plt.show()
+    data = cleaner.removeNoise(data)
+   
+
+
+
     return
 
 if __name__ == "__main__":

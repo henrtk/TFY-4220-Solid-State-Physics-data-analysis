@@ -13,7 +13,7 @@ This function adds the following columns:
     - "Fit": Curve fit to noise
     - "Peaks": Data substracted noise
 """
-def removeNoise(df: np.ndarray) -> np.ndarray:
+def removeNoise(df: pd.DataFrame) -> pd.DataFrame:
     filtered = _removePeaks(df) # Extract noise
     ys = filtered["Intensity"]
     xs = filtered['Angle']

@@ -1,9 +1,9 @@
 import plotly.express as px
 import numpy as np
 import pandas as pd
-#from scipy.signal import savgol_filter
 import scipy.optimize
 import typing
+from scipy.signal import savgol_filter
 
 """
 Main functionality. Takes in dataframe with columns
@@ -13,8 +13,9 @@ This function adds the following columns:
     - "Fit": Curve fit to noise
     - "Peaks": Data substracted noise
 """
-def removeNoise(df: np.ndarray) -> np.ndarray:
-    filtered = removePeaks(df) # Extract noise
+
+def removeNoise(df: pd.DataFrame) -> pd.DataFrame:
+    filtered = _removePeaks(df) # Extract noise
     ys = filtered["Intensity"]
     xs = filtered['Angle']
     # Curve fit exponential to noise
@@ -31,9 +32,9 @@ def removeNoise(df: np.ndarray) -> np.ndarray:
 """
 Removes diffraction peaks from dataframe df,
 so that we can curve fit to it later.
-Not to be used directly, only utility.
+
 """
-def removePeaks(df):
+def _removePeaks(df, smooth = False):
     shouldRemove=set() # Data points which should be removed
     # Remove points if lim=3 consecutive decreaces
     lim = 3
@@ -45,7 +46,8 @@ def removePeaks(df):
             if j == lim-1:
                 for s in range(i-j-10, i+1):
                     shouldRemove.add(s)
-    # Remove points if lim=4 consecutive increaces
+
+    # Remove points if lim=4 consecutive increases
     lim = 4
     for i in range(lim+1, df.index.size):
         for j in range(lim):
@@ -61,9 +63,10 @@ def removePeaks(df):
         if (df["Intensity"][i] > 35):
             shouldRemove.add(i)
     df = df.drop(shouldRemove)
-    #df["Intensity"] = savgol_filter(df["Intensity"], 5, 2) #Smoothening filter
-    return df
 
+    if smooth:
+        df["Intensity"] = savgol_filter(df["Intensity"], 5, 2) #Smoothening filter
+    return df
 
 def __main():
     with open("Si.txt") as file:
